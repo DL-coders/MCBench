@@ -1,6 +1,20 @@
 import torch
 
 from mqbench.utils.logger import logger
+from mqbench.fake_sparsity.sparsity_base import FakeSparseBase
+
+
+def enable_sparse(model):
+    logger.info('Enable sparse.')
+    for name, submodule in model.named_modules():
+        if isinstance(submodule, FakeSparseBase):
+            submodule.enable_fake_sparse()
+
+def disable_sparse(model):
+    logger.info('Enable sparse.')
+    for name, submodule in model.named_modules():
+        if isinstance(submodule, FakeSparseBase):
+            submodule.disable_fake_sparse()
 
 
 def enable_calibration(model):

@@ -33,6 +33,9 @@ from mqbench.observer import (
     MSEObserver,
     EMAMSEObserver,
 )
+from mqbench.fake_sparsity import (
+    NormFakeSparse
+)
 from mqbench.fuser_method_mappings import fuse_custom_config_dict
 from mqbench.utils.logger import logger
 from mqbench.utils.registry import DEFAULT_MODEL_QUANTIZER
@@ -148,7 +151,9 @@ FakeQuantizeDict = {
     'AdaRoundFakeQuantize':  AdaRoundFakeQuantize,   # AdaRound                     # noqa: E241
     'QDropFakeQuantize':     QDropFakeQuantize,      # BRECQ & QDrop                # noqa: E241
 }
-
+FakeSpaeseDict = {
+    'NormFakeSparse': NormFakeSparse
+}
 
 def get_qconfig_by_platform(deploy_backend: BackendType, extra_qparams: Dict):
     """
@@ -410,3 +415,28 @@ def prepare_by_platform(
                     _attr = types.MethodType(getattr(_type, attr_name), cur_module)
                 setattr(cur_module, attr_name, _attr)
     return prepared
+
+def prepare_sparse(model, sparse_config):
+    fake_sparse_type = sparse_config.get('sparse_type', None)
+    fake_sparse_kwargs = sparse_config.get('sparse_config', None)
+    sparse_scheduler_kwargs = sparse_config.get('schduler_config', None)
+    fake_sparse_with_args = FakeSpaeseDict[fake_sparse_type].with_args(**fake_sparse_kwargs)
+    sparse_exclude_name = sparse_config.get('exclude_module_name', None)
+    if sparse_scheduler_kwargs is None:
+        sparse_scheduler = None
+    else:
+        raise ValueError('Not supported')
+    from mqbench.custom_sparsifier.model_sparsifier import ModelSparsifier
+    sparsifier = ModelSparsifier(sparse_exclude_name)
+    return sparsifier(model, fake_sparse_with_args), sparse_scheduler
+
+def prepare(model: torch.nn.Module,
+            deploy_backend: BackendType = None,
+            prepare_custom_config_dict: Dict[str, Any] = {},
+            custom_tracer: Tracer = None,
+            sparse_config = {},
+            type='quant'):
+    if type == 'quant':
+        return prepare_by_platform(model, deploy_backend, prepare_custom_config_dict, custom_tracer)
+    elif type == 'sparse':
+        return prepare_sparse(model, sparse_config)

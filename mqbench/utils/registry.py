@@ -10,6 +10,16 @@ def register_model_quantizer(backend_type):
         return quantizer_cls
     return insert
 
+DEFAULT_MODEL_SPARSIFIER = OrderedDict()
+
+
+def register_model_SPARSIFIER(backend_type):
+    def insert(sparsifier_cls):
+        DEFAULT_MODEL_SPARSIFIER[backend_type] = sparsifier_cls
+        return sparsifier_cls
+    return insert
+
+
 BACKEND_DEPLOY_FUNCTION = OrderedDict()
 
 
