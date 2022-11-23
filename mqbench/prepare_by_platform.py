@@ -56,6 +56,7 @@ class BackendType(Enum):
     Tengine_u8 = "Tengine_u8"
     Tensorrt_NLP = "Tensorrt_NLP"
     Academic_NLP = "Academic_NLP"
+    NeRF = "NeRF"
 
 
 ParamsTable = {
@@ -66,6 +67,13 @@ ParamsTable = {
                                  a_qscheme=QuantizeScheme(symmetry=True, per_channel=False, pot_scale=False, bit=8),
                                  default_weight_quantize=NNIEFakeQuantize,
                                  default_act_quantize=NNIEFakeQuantize,
+                                 default_weight_observer=MinMaxObserver,
+                                 default_act_observer=EMAMinMaxObserver),
+    BackendType.NeRF    :   dict(qtype='affine',     # noqa: E241
+                                 w_qscheme=QuantizeScheme(symmetry=True, per_channel=True, pot_scale=False, bit=8, symmetric_range=True),
+                                 a_qscheme=QuantizeScheme(symmetry=True, per_channel=False, pot_scale=False, bit=8, symmetric_range=True),
+                                 default_weight_quantize=LearnableFakeQuantize,
+                                 default_act_quantize=LearnableFakeQuantize,
                                  default_weight_observer=MinMaxObserver,
                                  default_act_observer=EMAMinMaxObserver),
     BackendType.Tensorrt:   dict(qtype='affine',     # noqa: E241
@@ -397,6 +405,8 @@ def prepare_by_platform(
     # Prepare
     import mqbench.custom_quantizer  # noqa: F401
     extra_quantizer_dict = prepare_custom_config_dict.get('extra_quantizer_dict', {})
+    import pdb
+    pdb.set_trace()
     quantizer = DEFAULT_MODEL_QUANTIZER[deploy_backend](extra_quantizer_dict, extra_fuse_dict)
     prepared = quantizer.prepare(graph_module, qconfig)
     # Restore attr.
