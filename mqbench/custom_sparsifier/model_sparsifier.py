@@ -41,7 +41,7 @@ def swap_module(mod, sconfig, mapping):
 
 class ModelSparsifier(object):
 
-    def __init__(self, exclude_module_name)
+    def __init__(self, exclude_module_name):
         if exclude_module_name:
             self.exclude_module_name = exclude_module_name
         else:

@@ -41,7 +41,6 @@ from mqbench.utils.logger import logger
 from mqbench.utils.registry import DEFAULT_MODEL_QUANTIZER
 from mqbench.scheme import QuantizeScheme
 
-__all__ = ['prepare_by_platform']
 
 class BackendType(Enum):
     Academic = 'Academic'
@@ -405,8 +404,6 @@ def prepare_by_platform(
     # Prepare
     import mqbench.custom_quantizer  # noqa: F401
     extra_quantizer_dict = prepare_custom_config_dict.get('extra_quantizer_dict', {})
-    import pdb
-    pdb.set_trace()
     quantizer = DEFAULT_MODEL_QUANTIZER[deploy_backend](extra_quantizer_dict, extra_fuse_dict)
     prepared = quantizer.prepare(graph_module, qconfig)
     # Restore attr.
@@ -424,7 +421,7 @@ def prepare_by_platform(
                 if inspect.ismethod(_attr):
                     _attr = types.MethodType(getattr(_type, attr_name), cur_module)
                 setattr(cur_module, attr_name, _attr)
-    return prepared
+    return prepared, None # quantized model does not have a scheduler
 
 def prepare_sparse(model, sparse_config):
     fake_sparse_type = sparse_config.get('sparse_type', None)
@@ -438,7 +435,7 @@ def prepare_sparse(model, sparse_config):
         raise ValueError('Not supported')
     from mqbench.custom_sparsifier.model_sparsifier import ModelSparsifier
     sparsifier = ModelSparsifier(sparse_exclude_name)
-    return sparsifier(model, fake_sparse_with_args), sparse_scheduler
+    return sparsifier.prepare(model, fake_sparse_with_args), sparse_scheduler
 
 def prepare(model: torch.nn.Module,
             deploy_backend: BackendType = None,
