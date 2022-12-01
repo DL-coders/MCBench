@@ -34,7 +34,12 @@ from mqbench.observer import (
     EMAMSEObserver,
 )
 from mqbench.fake_sparsity import (
-    NormFakeSparse
+    NormFakeSparse,
+    MagFakeSparse
+)
+from mqbench.sparse_schedule import (
+    PerLayerScheduler, 
+    PerNetWorkScheduler
 )
 from mqbench.fuser_method_mappings import fuse_custom_config_dict
 from mqbench.utils.logger import logger
@@ -159,7 +164,12 @@ FakeQuantizeDict = {
     'QDropFakeQuantize':     QDropFakeQuantize,      # BRECQ & QDrop                # noqa: E241
 }
 FakeSpaeseDict = {
-    'NormFakeSparse': NormFakeSparse
+    'NormFakeSparse': NormFakeSparse,
+    'MagFakeSparse': MagFakeSparse
+}
+SparseScheduleDict = {
+    'per_layer': PerLayerScheduler,
+    'per_net': PerNetWorkScheduler
 }
 
 def get_qconfig_by_platform(deploy_backend: BackendType, extra_qparams: Dict):
@@ -432,7 +442,8 @@ def prepare_sparse(model, sparse_config):
     if sparse_scheduler_kwargs is None:
         sparse_scheduler = None
     else:
-        raise ValueError('Not supported')
+        assert sparse_scheduler_kwargs['type'] in SparseScheduleDict
+        sparse_scheduler = SparseScheduleDict[sparse_scheduler_kwargs['type']](sparse_scheduler_kwargs['kwargs'])
     from mqbench.custom_sparsifier.model_sparsifier import ModelSparsifier
     sparsifier = ModelSparsifier(sparse_exclude_name)
     return sparsifier.prepare(model, fake_sparse_with_args), sparse_scheduler
