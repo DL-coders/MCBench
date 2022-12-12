@@ -15,7 +15,9 @@ from mqbench.custom_quantizer import ModelQuantizer
 class NeRFModelQuantizer(ModelQuantizer):
     def __init__(self, extra_quantizer_dict, extra_fuse_dict):
         super().__init__(extra_quantizer_dict, extra_fuse_dict)
-        self.nerf_acti_modules = (torch.nn.ReLU, torch.nn.ReLU6)
+        self.nerf_acti_modules = (
+            torch.nn.qat.modules.linear.Linear,
+        )
         self.nerf_acti_functions = (torch.nn.functional.relu, torch.nn.functional.relu6)
 
     def _find_act_quants(self, model: GraphModule) -> set:
