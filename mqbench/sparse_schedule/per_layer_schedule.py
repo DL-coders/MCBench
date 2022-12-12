@@ -35,7 +35,7 @@ class PerLayerScheduler(_Scheduler):
         for name, mod in model.named_modules():
             if name in ratio_dict:
                 mod.weight_fake_sparse.ratio = ratio_dict[name]
-                logger.log(f'{name} set by {self.metric} as {ratio_dict[name]}')
+                logger.info(f'{name} set by {self.metric} as {ratio_dict[name]}')
         return model 
     
     def __call__(self, model):

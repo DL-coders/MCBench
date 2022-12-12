@@ -443,7 +443,7 @@ def prepare_sparse(model, sparse_config):
         sparse_scheduler = None
     else:
         assert sparse_scheduler_kwargs['type'] in SparseScheduleDict
-        sparse_scheduler = SparseScheduleDict[sparse_scheduler_kwargs['type']](sparse_scheduler_kwargs['kwargs'])
+        sparse_scheduler = SparseScheduleDict[sparse_scheduler_kwargs['type']](**sparse_scheduler_kwargs['kwargs'])
     from mqbench.custom_sparsifier.model_sparsifier import ModelSparsifier
     sparsifier = ModelSparsifier(sparse_exclude_name)
     return sparsifier.prepare(model, fake_sparse_with_args), sparse_scheduler

@@ -4,7 +4,7 @@ from mqbench.sparse_schedule.base_schedule import _Scheduler
 from mqbench.utils.logger import logger
 
 class PerNetWorkScheduler(_Scheduler):
-    def __init__(self, ratio, metric='l2'):
+    def __init__(self, ratio, metric='mag'):
         super().__init__()
         self.ratio = ratio 
         assert metric in ['l2', 'mag', 'grad']
@@ -24,8 +24,8 @@ class PerNetWorkScheduler(_Scheduler):
                 all_weight.append(mod.weight.flatten())
                 return_ratio[name] = (mod, mod.weight)
         all_weight = torch.cat(all_weight)
-        if self.metric == 'l2':
-            all_metric = all_weight.norm(2)
+        if self.metric == 'mag':
+            all_metric = all_weight.abs()
         else:
             raise NotImplementedError(f'{self.metric}')
         prune_num = int(self.ratio * all_metric.numel())
@@ -36,7 +36,8 @@ class PerNetWorkScheduler(_Scheduler):
         ratio_dict = {}
         for name in return_ratio:
             mod, weight = return_ratio[name]
-            ratio = (weight < threshold).sum() / weight.numel()
+            if self.metric == 'mag':
+                ratio = (weight.abs() < threshold).sum() / weight.numel()
             ratio_dict[name] = ratio
         return ratio_dict
 
@@ -44,7 +45,7 @@ class PerNetWorkScheduler(_Scheduler):
         for name, mod in model.named_modules():
             if name in ratio_dict:
                 mod.weight_fake_sparse.ratio = ratio_dict[name]
-                logger.log(f'{name} set by {self.metric} as {ratio_dict[name]}')
+                logger.info(f'{name} set by {self.metric} as {ratio_dict[name]}')
         return model
 
     def __call__(self, model):
