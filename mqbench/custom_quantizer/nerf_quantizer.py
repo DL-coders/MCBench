@@ -16,7 +16,8 @@ class NeRFModelQuantizer(ModelQuantizer):
     def __init__(self, extra_quantizer_dict, extra_fuse_dict):
         super().__init__(extra_quantizer_dict, extra_fuse_dict)
         self.nerf_acti_modules = (
-            torch.nn.qat.modules.linear.Linear,
+            torch.nn.intrinsic.qat.modules.linear_relu.LinearReLU,
+            torch.nn.ReLU
         )
         self.nerf_acti_functions = (torch.nn.functional.relu, torch.nn.functional.relu6)
 
