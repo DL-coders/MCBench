@@ -30,6 +30,8 @@ class NeRFModelQuantizer(ModelQuantizer):
                 ((node.op == 'call_function' or node.op == 'call_method') and
                         node.target in self.nerf_acti_functions):
                 node_need_to_quantize_output.append(node)
+            elif (node.op == 'call_function' and node.target == torch.nn.functional.grid_sample):
+                node_need_to_quantize_output.append(node.args[0])
         return node_need_to_quantize_output
 
 
