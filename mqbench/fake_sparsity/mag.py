@@ -11,7 +11,7 @@ class MagFakeSparse(FakeSparseBase):
         self.mask = None
 
     def __repr__(self):
-        return f'MagFakeSparse(ratio={self.ratio}, fixed_mask={self.fixed_mask}, fake_quant_enabled={self.fake_sparse_enabled.item() == 1}'
+        return f'MagFakeSparse(ratio={self.ratio}, fixed_mask={self.fixed_mask}, fake_sparse_enabled={self.fake_sparse_enabled.item() == 1}'
 
     def forward(self, x):
         if self.fake_sparse_enabled[0] == 1:
@@ -22,14 +22,14 @@ class MagFakeSparse(FakeSparseBase):
 
     def generate_mask_by_norm(self, x):
         if self.ratio >= 1:
-            return torch.zeros_like(x)
-        elif self.ratio <= 0:
             return torch.ones_like(x)
+        elif self.ratio <= 0:
+            return torch.zeros_like(x)
         mag = x.abs()
         sorted_norm = mag.flatten().sort()[0]
-        masked_index = math.floor(len(sorted_norm) * self.ratio)
-        if (masked_index == 0):
-            masked_index += 1
+        masked_index = math.floor(len(sorted_norm) * (1 - self.ratio))
+        if (masked_index == len(sorted_norm)) - 1:
+            masked_index -= 1
         mask = mag >= (sorted_norm[masked_index])
         return mask * 1.0 
 
@@ -40,6 +40,7 @@ class MagFakeSparse(FakeSparseBase):
         else:
             if self.fixed_mask is False:
                 self.mask = self.generate_mask_by_norm(x)
+        # print(self.mask.mean())
         return self.mask
                 
     @torch.jit.export

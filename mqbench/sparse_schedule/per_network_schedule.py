@@ -29,8 +29,10 @@ class PerNetWorkScheduler(_Scheduler):
         else:
             raise NotImplementedError(f'{self.metric}')
         prune_num = int(self.ratio * all_metric.numel())
-        if prune_num == 0:
+        if prune_num <= 0:
             threshold = all_metric.min() - 1
+        elif prune_num >= all_metric.numel():
+            threshold = all_metric.max() + 1
         else:
             threshold = all_metric.sort()[0][prune_num - 1]
         ratio_dict = {}
@@ -45,6 +47,7 @@ class PerNetWorkScheduler(_Scheduler):
         for name, mod in model.named_modules():
             if name in ratio_dict:
                 mod.weight_fake_sparse.ratio = ratio_dict[name]
+                mod.weight_fake_sparse.mask = None
                 logger.info(f'{name} set by {self.metric} as {ratio_dict[name]}')
         return model
 
